@@ -1,0 +1,259 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+    .hero-section {
+        background: linear-gradient(135deg, var(--primary-green) 0%, var(--secondary-green) 50%, var(--light-green) 100%);
+        border-radius: 15px;
+        box-shadow: 0 8px 24px rgba(45, 106, 79, 0.3);
+        padding: 3rem 2rem !important;
+    }
+    
+    .hero-section h1 {
+        font-weight: 700;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+    }
+    
+    .hero-section .lead {
+        font-size: 1.2rem;
+        opacity: 0.95;
+    }
+    
+    .hero-section .btn-light {
+        background-color: white;
+        color: var(--primary-green);
+        font-weight: 600;
+        padding: 12px 30px;
+        border: none;
+        transition: all 0.3s ease;
+    }
+    
+    .hero-section .btn-light:hover {
+        background-color: var(--pale-green);
+        color: var(--text-dark);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+    
+    .hero-section .btn-outline-light {
+        border: 2px solid white;
+        color: white;
+        font-weight: 600;
+        padding: 12px 30px;
+        transition: all 0.3s ease;
+    }
+    
+    .hero-section .btn-outline-light:hover {
+        background-color: white;
+        color: var(--primary-green);
+        transform: translateY(-2px);
+    }
+    
+    .card {
+        border: none;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(45, 106, 79, 0.1);
+        transition: all 0.3s ease;
+        background-color: white;
+    }
+    
+    .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 24px rgba(45, 106, 79, 0.2);
+    }
+    
+    .card .fa-camera {
+        color: var(--primary-green) !important;
+    }
+    
+    .card .fa-check-circle {
+        color: var(--secondary-green) !important;
+    }
+    
+    .card .fa-coins {
+        color: var(--light-green) !important;
+    }
+    
+    .card-title {
+        color: var(--primary-green);
+        font-weight: 600;
+        margin-top: 1rem;
+    }
+    
+    .card-text {
+        color: #555;
+    }
+    
+    h2 {
+        color: var(--primary-green);
+        font-weight: 700;
+        margin-bottom: 1.5rem;
+        border-bottom: 3px solid var(--accent-green);
+        padding-bottom: 0.5rem;
+        display: inline-block;
+    }
+    
+    #public-reports-container .card {
+        border-left: 4px solid var(--accent-green);
+    }
+    
+    #public-reports-container .card-title {
+        font-size: 1rem;
+        color: var(--text-dark);
+    }
+    
+    .badge.bg-success {
+        background-color: var(--secondary-green) !important;
+    }
+    
+    .badge.bg-warning {
+        background-color: #f4a261 !important;
+    }
+    
+    .badge.bg-danger {
+        background-color: #e63946 !important;
+    }
+    
+    .badge.bg-dark {
+        background-color: var(--text-dark) !important;
+    }
+    
+    .badge.bg-info {
+        background-color: var(--light-green) !important;
+    }
+    
+    .badge.bg-primary {
+        background-color: var(--primary-green) !important;
+    }
+    
+    .spinner-border {
+        color: var(--primary-green);
+    }
+    
+    .text-muted {
+        color: #6c757d !important;
+    }
+</style>
+
+<div class="hero-section text-white mb-4">
+    <div class="text-center">
+        <h1 class="display-4">Report Potholes, Improve Roads</h1>
+        <p class="lead">Help your community by reporting road hazards and earning credits</p>
+        {% if not session.user_id %}
+            <a href="{{ url_for('register') }}" class="btn btn-light btn-lg me-2">Get Started</a>
+            <a href="{{ url_for('login') }}" class="btn btn-outline-light btn-lg">Login</a>
+        {% else %}
+            <a href="{{ url_for('report_pothole') }}" class="btn btn-light btn-lg">Report a Pothole</a>
+        {% endif %}
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <i class="fas fa-camera fa-3x mb-3"></i>
+                <h5 class="card-title">Report Issues</h5>
+                <p class="card-text">Take photos of potholes and submit reports with location details</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <i class="fas fa-check-circle fa-3x mb-3"></i>
+                <h5 class="card-title">Get Verified</h5>
+                <p class="card-text">Municipal authorities verify and prioritize reported issues</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <i class="fas fa-coins fa-3x mb-3"></i>
+                <h5 class="card-title">Earn Credits</h5>
+                <p class="card-text">Earn credits for reporting and get bonuses when issues are fixed</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="mt-5">
+    <h2>Recent Verified Reports</h2>
+    <div id="public-reports-container">
+        <div class="text-center">
+            <div class="spinner-border" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Load public reports on page load
+document.addEventListener('DOMContentLoaded', function() {
+    loadPublicReports();
+});
+
+async function loadPublicReports() {
+    try {
+        const response = await fetch('/api/public-reports');
+        const reports = await response.json();
+        
+        const container = document.getElementById('public-reports-container');
+        
+        if (reports.length === 0) {
+            container.innerHTML = '<p class="text-muted">No verified reports yet.</p>';
+            return;
+        }
+        
+        let html = '<div class="row">';
+        reports.slice(0, 6).forEach(report => {
+            html += `
+                <div class="col-md-6 col-lg-4 mb-3">
+                    <div class="card">
+                        <div class="card-body">
+                            <h6 class="card-title">${report.location_name}</h6>
+                            <p class="card-text small">${report.description}</p>
+                            <div class="d-flex justify-content-between">
+                                <span class="badge bg-${getSeverityColor(report.severity)}">${report.severity}</span>
+                                <span class="badge bg-${getStatusColor(report.status)}">${report.status}</span>
+                            </div>
+                            <small class="text-muted">${report.created_at}</small>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+        html += '</div>';
+        
+        container.innerHTML = html;
+    } catch (error) {
+        console.error('Error loading public reports:', error);
+        document.getElementById('public-reports-container').innerHTML = 
+            '<p class="text-danger">Error loading reports.</p>';
+    }
+}
+
+function getSeverityColor(severity) {
+    const colors = {
+        'LOW': 'success',
+        'MEDIUM': 'warning',
+        'HIGH': 'danger',
+        'CRITICAL': 'dark'
+    };
+    return colors[severity] || 'secondary';
+}
+
+function getStatusColor(status) {
+    const colors = {
+        'PENDING': 'warning',
+        'VERIFIED': 'info',
+        'IN_PROGRESS': 'primary',
+        'COMPLETED': 'success',
+        'REJECTED': 'danger'
+    };
+    return colors[status] || 'secondary';
+}
+</script>
+{% endblock %}

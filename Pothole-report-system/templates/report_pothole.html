@@ -1,0 +1,174 @@
+{% extends "base.html" %}
+
+{% block title %}Report Pothole - Pothole Reporting System{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0">Report a Pothole</h4>
+            </div>
+            <div class="card-body">
+                <form id="reportForm" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label for="image" class="form-label">Photo *</label>
+                        <input type="file" class="form-control" id="image" name="image" accept="image/*" required>
+                        <div class="form-text">Upload a clear photo of the pothole</div>
+                        <div id="image-preview" class="mt-2"></div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="location_name" class="form-label">Location Name *</label>
+                        <input type="text" class="form-control" id="location_name" name="location_name" 
+                               placeholder="e.g., Main Street near City Hall" required>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="latitude" class="form-label">Latitude</label>
+                            <input type="number" step="0.000001" class="form-control" id="latitude" name="latitude">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="longitude" class="form-label">Longitude</label>
+                            <input type="number" step="0.000001" class="form-control" id="longitude" name="longitude">
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <button type="button" class="btn btn-outline-primary btn-sm" id="getCurrentLocation">
+                            <i class="fas fa-map-marker-alt"></i> Get Current Location
+                        </button>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="severity" class="form-label">Severity *</label>
+                        <select class="form-select" id="severity" name="severity" required>
+                            <option value="">Select Severity</option>
+                            <option value="LOW">Low - Minor surface damage</option>
+                            <option value="MEDIUM">Medium - Noticeable damage, affects driving</option>
+                            <option value="HIGH">High - Significant damage, potential vehicle damage</option>
+                            <option value="CRITICAL">Critical - Dangerous, immediate attention needed</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Description *</label>
+                        <textarea class="form-control" id="description" name="description" rows="4" 
+                                  placeholder="Describe the pothole, its size, and any impact on traffic" required></textarea>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary" id="submitBtn">
+                        <span class="spinner-border spinner-border-sm d-none" id="loadingSpinner"></span>
+                        Submit Report
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Reporting Guidelines</h5>
+            </div>
+            <div class="card-body">
+                <ul class="list-unstyled">
+                    <li class="mb-2"><i class="fas fa-camera text-primary"></i> Take a clear photo showing the pothole</li>
+                    <li class="mb-2"><i class="fas fa-map-marker-alt text-success"></i> Provide accurate location information</li>
+                    <li class="mb-2"><i class="fas fa-exclamation-triangle text-warning"></i> Select appropriate severity level</li>
+                    <li class="mb-2"><i class="fas fa-pen text-info"></i> Write a detailed description</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="card mt-3">
+            <div class="card-header">
+                <h5 class="mb-0">Rewards</h5>
+            </div>
+            <div class="card-body">
+                <p class="text-success"><strong>+5 Credits</strong> for submitting this report</p>
+                <p class="text-info"><strong>+10 Credits</strong> when verified by authorities</p>
+                <p class="text-warning"><strong>+5 Bonus Credits</strong> when repair is completed</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('image').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const preview = document.getElementById('image-preview');
+            preview.innerHTML = `<img src="${e.target.result}" class="img-fluid rounded" style="max-height: 200px;">`;
+        };
+        reader.readAsDataURL(file);
+    }
+});
+
+document.getElementById('getCurrentLocation').addEventListener('click', function() {
+    if (navigator.geolocation) {
+        this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Getting Location...';
+        this.disabled = true;
+        
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                document.getElementById('latitude').value = position.coords.latitude;
+                document.getElementById('longitude').value = position.coords.longitude;
+                this.innerHTML = '<i class="fas fa-check"></i> Location Set';
+                setTimeout(() => {
+                    this.innerHTML = '<i class="fas fa-map-marker-alt"></i> Get Current Location';
+                    this.disabled = false;
+                }, 2000);
+            },
+            (error) => {
+                showAlert('Unable to get location: ' + error.message, 'warning');
+                this.innerHTML = '<i class="fas fa-map-marker-alt"></i> Get Current Location';
+                this.disabled = false;
+            }
+        );
+    } else {
+        showAlert('Geolocation is not supported by this browser', 'warning');
+    }
+});
+
+document.getElementById('reportForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const submitBtn = document.getElementById('submitBtn');
+    const loadingSpinner = document.getElementById('loadingSpinner');
+    
+    submitBtn.disabled = true;
+    loadingSpinner.classList.remove('d-none');
+    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Submitting...';
+    
+    const formData = new FormData(this);
+    
+    try {
+        const response = await fetch('/report-pothole', {
+            method: 'POST',
+            body: formData
+        });
+        
+        const result = await response.json();
+        
+        if (response.ok) {
+            showAlert('Report submitted successfully! You earned 5 credits.', 'success');
+            setTimeout(() => {
+                window.location.href = '/dashboard';
+            }, 2000);
+        } else {
+            showAlert(result.error, 'danger');
+        }
+    } catch (error) {
+        showAlert('Failed to submit report. Please try again.', 'danger');
+    } finally {
+        submitBtn.disabled = false;
+        loadingSpinner.classList.add('d-none');
+        submitBtn.innerHTML = 'Submit Report';
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Pothole Reporting System{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <h2>My Dashboard</h2>
+        
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="card bg-primary text-white">
+                    <div class="card-body">
+                        <h5 class="card-title">My Credits</h5>
+                        <h2 id="user-credits">0</h2>
+                        <small>Earned from reporting</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card bg-success text-white">
+                    <div class="card-body">
+                        <h5 class="card-title">Total Reports</h5>
+                        <h2 id="total-reports">0</h2>
+                        <small>Reports submitted</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">My Reports</h5>
+                <a href="{{ url_for('report_pothole') }}" class="btn btn-primary btn-sm">New Report</a>
+            </div>
+            <div class="card-body">
+                <div id="my-reports-container">
+                    <div class="text-center">
+                        <div class="spinner-border" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Profile</h5>
+            </div>
+            <div class="card-body" id="user-profile">
+                <!-- Profile data will be loaded here -->
+            </div>
+        </div>
+        
+        <div class="card mt-3">
+            <div class="card-header">
+                <h5 class="mb-0">Credit System</h5>
+            </div>
+            <div class="card-body">
+                <ul class="list-unstyled">
+                    <li><i class="fas fa-plus text-success"></i> Report: +5 credits</li>
+                    <li><i class="fas fa-check text-info"></i> Verification: +10 credits</li>
+                    <li><i class="fas fa-star text-warning"></i> Completion: +5 credits</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    loadUserProfile();
+    loadMyReports();
+});
+
+async function loadUserProfile() {
+    try {
+        const response = await fetch('/api/user-profile');
+        const profile = await response.json();
+        
+        document.getElementById('user-credits').textContent = profile.credits;
+        
+        document.getElementById('user-profile').innerHTML = `
+            <p><strong>Username:</strong> ${profile.username}</p>
+            <p><strong>Email:</strong> ${profile.email}</p>
+            <p><strong>Phone:</strong> ${profile.phone_number || 'Not provided'}</p>
+            <p><strong>Credits:</strong> ${profile.credits}</p>
+        `;
+    } catch (error) {
+        console.error('Error loading profile:', error);
+    }
+}
+
+async function loadMyReports() {
+    try {
+        const response = await fetch('/api/my-reports');
+        const reports = await response.json();
+        
+        document.getElementById('total-reports').textContent = reports.length;
+        
+        const container = document.getElementById('my-reports-container');
+        
+        if (reports.length === 0) {
+            container.innerHTML = '<p class="text-muted">No reports yet. <a href="/report-pothole">Submit your first report!</a></p>';
+            return;
+        }
+        
+        let html = '';
+        reports.forEach(report => {
+            html += `
+                <div class="card mb-2">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-8">
+                                <h6 class="card-title">${report.location_name}</h6>
+                                <p class="card-text small">${report.description}</p>
+                                <small class="text-muted">${report.created_at}</small>
+                            </div>
+                            <div class="col-md-4 text-end">
+                                <span class="badge bg-${getSeverityColor(report.severity)} mb-1">${report.severity}</span><br>
+                                <span class="badge bg-${getStatusColor(report.status)} mb-1">${report.status}</span><br>
+                                <small class="text-success">+${report.credits_awarded} credits</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+        
+        container.innerHTML = html;
+    } catch (error) {
+        console.error('Error loading reports:', error);
+        document.getElementById('my-reports-container').innerHTML = 
+            '<p class="text-danger">Error loading reports.</p>';
+    }
+}
+</script>
+{% endblock %}

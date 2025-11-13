@@ -1,0 +1,185 @@
+{% extends "base.html" %}
+
+{% block title %}Municipal Staff Registration - Pothole Reporting System{% endblock %}
+
+{% block content %}
+<style>
+    .register-container {
+        min-height: 60vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem 0;
+    }
+    
+    .card {
+        border: none;
+        border-radius: 15px;
+        box-shadow: 0 8px 24px rgba(45, 106, 79, 0.15);
+        overflow: hidden;
+    }
+    
+    .card-header {
+        background: linear-gradient(135deg, var(--text-dark) 0%, var(--primary-green) 100%);
+        color: white;
+        padding: 1.5rem;
+        border: none;
+    }
+    
+    .card-header h4 {
+        font-weight: 600;
+        margin: 0;
+    }
+    
+    .card-header h4 i {
+        color: var(--accent-green);
+    }
+    
+    .card-body {
+        padding: 2rem;
+        background-color: white;
+    }
+    
+    .form-label {
+        color: var(--text-dark);
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+    
+    .form-control {
+        border: 2px solid var(--pale-green);
+        border-radius: 8px;
+        padding: 0.75rem;
+        transition: all 0.3s ease;
+    }
+    
+    .form-control:focus {
+        border-color: var(--secondary-green);
+        box-shadow: 0 0 0 0.2rem rgba(64, 145, 108, 0.25);
+    }
+    
+    .btn-primary {
+        background: linear-gradient(135deg, var(--text-dark) 0%, var(--primary-green) 100%);
+        border: none;
+        padding: 0.75rem;
+        font-weight: 600;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-primary:hover {
+        background: linear-gradient(135deg, var(--primary-green) 0%, var(--secondary-green) 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(45, 106, 79, 0.3);
+    }
+    
+    .text-center a {
+        color: var(--secondary-green);
+        text-decoration: none;
+        font-weight: 500;
+        transition: color 0.3s ease;
+    }
+    
+    .text-center a:hover {
+        color: var(--light-green);
+        text-decoration: underline;
+    }
+    
+    .text-muted {
+        color: #6c757d !important;
+    }
+    
+    .alert-info {
+        background-color: var(--pale-green);
+        border: 2px solid var(--accent-green);
+        color: var(--text-dark);
+        border-radius: 8px;
+    }
+</style>
+
+<div class="register-container">
+    <div class="row justify-content-center w-100">
+        <div class="col-md-6 col-lg-5">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0"><i class="fas fa-user-shield me-2"></i>Municipal Staff Registration</h4>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info mb-4">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <small>Register as municipal staff to access the administrative dashboard</small>
+                    </div>
+                    <form id="municipalRegisterForm">
+                        <div class="mb-3">
+                            <label for="username" class="form-label">Username</label>
+                            <input type="text" class="form-control" id="username" name="username" placeholder="Choose a username" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="email" name="email" placeholder="Enter your official email" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="password" class="form-label">Password</label>
+                            <input type="password" class="form-control" id="password" name="password" placeholder="Create a password" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="confirm_password" class="form-label">Confirm Password</label>
+                            <input type="password" class="form-control" id="confirm_password" name="confirm_password" placeholder="Confirm your password" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="fas fa-user-plus me-2"></i>Register as Staff
+                        </button>
+                    </form>
+                    <div class="mt-4 text-center">
+                        <a href="/municipal-login" class="d-block mb-2">Already have an account? Login</a>
+                        <a href="/" class="text-muted">Back to Public Portal</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('municipalRegisterForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const password = document.getElementById('password').value;
+    const confirmPassword = document.getElementById('confirm_password').value;
+    
+    if (password !== confirmPassword) {
+        showAlert('Passwords do not match!', 'danger');
+        return;
+    }
+    
+    const formData = {
+        username: document.getElementById('username').value,
+        email: document.getElementById('email').value,
+        password: password
+    };
+    
+    try {
+        const response = await fetch('/municipal-register', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(formData)
+        });
+        
+        const result = await response.json();
+        
+        if (response.ok) {
+            showAlert('Staff account created successfully! You can now login.', 'success');
+            setTimeout(() => {
+                window.location.href = '/municipal-login';
+            }, 2000);
+        } else {
+            showAlert(result.error, 'danger');
+        }
+    } catch (error) {
+        showAlert('Registration failed. Please try again.', 'danger');
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,599 @@
+{% extends "base.html" %}
+
+{% block title %}Municipal Dashboard - Pothole Reporting System{% endblock %}
+
+{% block content %}
+<style>
+    h2 {
+        color: var(--primary-green);
+        font-weight: 700;
+        margin-bottom: 1.5rem;
+        border-bottom: 3px solid var(--accent-green);
+        padding-bottom: 0.5rem;
+    }
+    
+    .stats-card {
+        border: none;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease;
+        margin-bottom: 1.5rem;
+    }
+    
+    .stats-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+    }
+    
+    .stats-card.bg-warning {
+        background: linear-gradient(135deg, #f4a261 0%, #e76f51 100%) !important;
+    }
+    
+    .stats-card.bg-info {
+        background: linear-gradient(135deg, var(--light-green) 0%, var(--accent-green) 100%) !important;
+    }
+    
+    .stats-card.bg-primary {
+        background: linear-gradient(135deg, var(--primary-green) 0%, var(--secondary-green) 100%) !important;
+    }
+    
+    .stats-card.bg-success {
+        background: linear-gradient(135deg, var(--secondary-green) 0%, var(--light-green) 100%) !important;
+    }
+    
+    .stats-card .card-body {
+        padding: 1.5rem;
+    }
+    
+    .stats-card h5 {
+        font-size: 0.9rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 0.5rem;
+    }
+    
+    .stats-card h2 {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin: 0.5rem 0;
+        border: none;
+        padding: 0;
+    }
+    
+    .stats-card small {
+        font-size: 0.85rem;
+        opacity: 0.9;
+    }
+    
+    .main-card {
+        border: none;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(45, 106, 79, 0.1);
+        overflow: hidden;
+    }
+    
+    .card-header {
+        background: linear-gradient(135deg, var(--primary-green) 0%, var(--secondary-green) 100%);
+        color: white;
+        padding: 1.25rem;
+        border: none;
+    }
+    
+    .card-header h5 {
+        margin: 0;
+        font-weight: 600;
+    }
+    
+    .form-select {
+        border: 2px solid var(--pale-green);
+        border-radius: 6px;
+        transition: all 0.3s ease;
+    }
+    
+    .form-select:focus {
+        border-color: var(--secondary-green);
+        box-shadow: 0 0 0 0.2rem rgba(64, 145, 108, 0.25);
+    }
+    
+    .table {
+        margin-bottom: 0;
+    }
+    
+    .table thead {
+        background-color: var(--pale-green);
+        color: var(--text-dark);
+    }
+    
+    .table thead th {
+        font-weight: 600;
+        border: none;
+        padding: 1rem;
+    }
+    
+    .table tbody tr {
+        transition: background-color 0.2s ease;
+    }
+    
+    .table tbody tr:hover {
+        background-color: rgba(149, 213, 178, 0.2);
+    }
+    
+    .table tbody td {
+        padding: 1rem;
+        vertical-align: middle;
+    }
+    
+    .img-thumbnail {
+        border: 2px solid var(--accent-green);
+        border-radius: 8px;
+        transition: all 0.3s ease;
+    }
+    
+    .img-thumbnail:hover {
+        transform: scale(1.1);
+        box-shadow: 0 4px 12px rgba(45, 106, 79, 0.3);
+    }
+    
+    .badge {
+        padding: 0.4rem 0.8rem;
+        font-weight: 600;
+        border-radius: 6px;
+    }
+    
+    .badge.bg-success {
+        background-color: var(--secondary-green) !important;
+    }
+    
+    .badge.bg-warning {
+        background-color: #f4a261 !important;
+        color: var(--text-dark);
+    }
+    
+    .badge.bg-danger {
+        background-color: #e63946 !important;
+    }
+    
+    .badge.bg-dark {
+        background-color: var(--text-dark) !important;
+    }
+    
+    .badge.bg-info {
+        background-color: var(--light-green) !important;
+        color: white;
+    }
+    
+    .badge.bg-primary {
+        background-color: var(--primary-green) !important;
+    }
+    
+    .btn-primary {
+        background: linear-gradient(135deg, var(--primary-green) 0%, var(--secondary-green) 100%);
+        border: none;
+        padding: 0.5rem 1rem;
+        font-weight: 600;
+        border-radius: 6px;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-primary:hover {
+        background: linear-gradient(135deg, var(--secondary-green) 0%, var(--light-green) 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(45, 106, 79, 0.3);
+    }
+    
+    .btn-success {
+        background-color: var(--secondary-green);
+        border: none;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-success:hover {
+        background-color: var(--light-green);
+        transform: translateY(-2px);
+    }
+    
+    .btn-danger {
+        background-color: #e63946;
+        border: none;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-danger:hover {
+        background-color: #d62828;
+        transform: translateY(-2px);
+    }
+    
+    .btn-warning {
+        background-color: #f4a261;
+        border: none;
+        color: var(--text-dark);
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-warning:hover {
+        background-color: #e76f51;
+        color: white;
+        transform: translateY(-2px);
+    }
+    
+    .modal-content {
+        border: none;
+        border-radius: 12px;
+        overflow: hidden;
+    }
+    
+    .modal-header {
+        background: linear-gradient(135deg, var(--primary-green) 0%, var(--secondary-green) 100%);
+        color: white;
+        border: none;
+    }
+    
+    .modal-title {
+        font-weight: 600;
+    }
+    
+    .btn-close {
+        filter: brightness(0) invert(1);
+    }
+    
+    .form-label {
+        color: var(--text-dark);
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+    
+    .form-control, .form-select {
+        border: 2px solid var(--pale-green);
+        border-radius: 6px;
+        transition: all 0.3s ease;
+    }
+    
+    .form-control:focus, .form-select:focus {
+        border-color: var(--secondary-green);
+        box-shadow: 0 0 0 0.2rem rgba(64, 145, 108, 0.25);
+    }
+    
+    .spinner-border {
+        color: var(--primary-green);
+    }
+    
+    .text-muted {
+        color: #6c757d !important;
+    }
+    
+    .text-danger {
+        color: #e63946 !important;
+    }
+</style>
+
+<div class="row">
+    <div class="col-12">
+        <h2><i class="fas fa-chart-line me-2"></i>Municipal Dashboard</h2>
+        
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card stats-card bg-warning text-white">
+                    <div class="card-body">
+                        <h5 class="card-title">Pending</h5>
+                        <h2 id="pending-count">0</h2>
+                        <small>Awaiting Review</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card stats-card bg-info text-white">
+                    <div class="card-body">
+                        <h5 class="card-title">Verified</h5>
+                        <h2 id="verified-count">0</h2>
+                        <small>Approved Reports</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card stats-card bg-primary text-white">
+                    <div class="card-body">
+                        <h5 class="card-title">In Progress</h5>
+                        <h2 id="progress-count">0</h2>
+                        <small>Being Repaired</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card stats-card bg-success text-white">
+                    <div class="card-body">
+                        <h5 class="card-title">Completed</h5>
+                        <h2 id="completed-count">0</h2>
+                        <small>Fixed Issues</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card main-card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0"><i class="fas fa-list me-2"></i>All Reports</h5>
+        <div>
+            <select id="statusFilter" class="form-select form-select-sm" onchange="filterReports()">
+                <option value="">All Status</option>
+                <option value="PENDING">Pending</option>
+                <option value="VERIFIED">Verified</option>
+                <option value="IN_PROGRESS">In Progress</option>
+                <option value="COMPLETED">Completed</option>
+                <option value="REJECTED">Rejected</option>
+            </select>
+        </div>
+    </div>
+    <div class="card-body">
+        <div id="reports-container">
+            <div class="text-center">
+                <div class="spinner-border" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Verification Modal -->
+<div class="modal fade" id="verificationModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fas fa-clipboard-check me-2"></i>Report Details & Verification</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="modal-report-details"></div>
+                <form id="verificationForm">
+                    <input type="hidden" id="modal-report-id" name="report_id">
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="verified_by" class="form-label">Verified By</label>
+                                <input type="text" class="form-control" id="verified_by" name="verified_by" placeholder="Enter your name" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="estimated_repair_date" class="form-label">Estimated Repair Date</label>
+                                <input type="date" class="form-control" id="estimated_repair_date" name="estimated_repair_date">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="notes" class="form-label">Notes</label>
+                        <textarea class="form-control" id="notes" name="notes" rows="3" placeholder="Add any additional notes or comments..."></textarea>
+                    </div>
+                    
+                    <div class="d-flex gap-2">
+                        <button type="button" class="btn btn-success" onclick="submitVerification('approve')">
+                            <i class="fas fa-check me-2"></i>Approve
+                        </button>
+                        <button type="button" class="btn btn-danger" onclick="submitVerification('reject')">
+                            <i class="fas fa-times me-2"></i>Reject
+                        </button>
+                        <button type="button" class="btn btn-warning" onclick="submitVerification('need_info')">
+                            <i class="fas fa-question me-2"></i>Need More Info
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Image Modal -->
+<div class="modal fade" id="imageModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fas fa-image me-2"></i>Pothole Image</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center">
+                <img id="modalImage" src="" class="img-fluid" style="border-radius: 8px;">
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let allReports = [];
+let filteredReports = [];
+
+document.addEventListener('DOMContentLoaded', function() {
+    loadAllReports();
+});
+
+async function loadAllReports() {
+    try {
+        const response = await fetch('/api/all-reports');
+        allReports = await response.json();
+        filteredReports = allReports;
+        
+        updateCounts();
+        displayReports();
+    } catch (error) {
+        console.error('Error loading reports:', error);
+        document.getElementById('reports-container').innerHTML = 
+            '<p class="text-danger">Error loading reports.</p>';
+    }
+}
+
+function updateCounts() {
+    const counts = {
+        pending: allReports.filter(r => r.status === 'PENDING').length,
+        verified: allReports.filter(r => r.status === 'VERIFIED').length,
+        progress: allReports.filter(r => r.status === 'IN_PROGRESS').length,
+        completed: allReports.filter(r => r.status === 'COMPLETED').length
+    };
+    
+    document.getElementById('pending-count').textContent = counts.pending;
+    document.getElementById('verified-count').textContent = counts.verified;
+    document.getElementById('progress-count').textContent = counts.progress;
+    document.getElementById('completed-count').textContent = counts.completed;
+}
+
+function filterReports() {
+    const status = document.getElementById('statusFilter').value;
+    filteredReports = status ? allReports.filter(r => r.status === status) : allReports;
+    displayReports();
+}
+
+function displayReports() {
+    const container = document.getElementById('reports-container');
+    
+    if (filteredReports.length === 0) {
+        container.innerHTML = '<p class="text-muted">No reports found.</p>';
+        return;
+    }
+    
+    let html = '<div class="table-responsive"><table class="table table-hover"><thead><tr>';
+    html += '<th>Image</th><th>Location</th><th>Description</th><th>Severity</th><th>Status</th><th>Reporter</th><th>Date</th><th>Actions</th>';
+    html += '</tr></thead><tbody>';
+    
+    filteredReports.forEach(report => {
+        html += `
+            <tr>
+                <td>
+                    ${report.image_url ? 
+                        `<img src="${report.image_url}" class="img-thumbnail" style="width: 60px; height: 60px; object-fit: cover; cursor: pointer;" onclick="showImage('${report.image_url}')">` : 
+                        '<span class="text-muted">No image</span>'
+                    }
+                </td>
+                <td>${report.location_name}</td>
+                <td>${report.description.substring(0, 50)}${report.description.length > 50 ? '...' : ''}</td>
+                <td><span class="badge bg-${getSeverityColor(report.severity)}">${report.severity}</span></td>
+                <td><span class="badge bg-${getStatusColor(report.status)}">${report.status}</span></td>
+                <td>${report.username}</td>
+                <td>${report.created_at}</td>
+                <td>
+                    <button class="btn btn-sm btn-primary" onclick="openVerificationModal('${report.report_id}')">
+                        ${report.status === 'PENDING' ? '<i class="fas fa-search me-1"></i>Review' : '<i class="fas fa-eye me-1"></i>View Details'}
+                    </button>
+                </td>
+            </tr>
+        `;
+    });
+    
+    html += '</tbody></table></div>';
+    container.innerHTML = html;
+}
+
+function showImage(imageUrl) {
+    document.getElementById('modalImage').src = imageUrl;
+    new bootstrap.Modal(document.getElementById('imageModal')).show();
+}
+
+function openVerificationModal(reportId) {
+    const report = allReports.find(r => r.report_id === reportId);
+    if (!report) return;
+    
+    document.getElementById('modal-report-id').value = reportId;
+    
+    const detailsHtml = `
+        <div class="row mb-3">
+            <div class="col-md-8">
+                <h6 style="color: var(--primary-green); font-weight: 600; margin-bottom: 1rem;">Report Details</h6>
+                <table class="table table-sm">
+                    <tr><td><strong>Location:</strong></td><td>${report.location_name}</td></tr>
+                    <tr><td><strong>Severity:</strong></td><td><span class="badge bg-${getSeverityColor(report.severity)}">${report.severity}</span></td></tr>
+                    <tr><td><strong>Status:</strong></td><td><span class="badge bg-${getStatusColor(report.status)}">${report.status}</span></td></tr>
+                    <tr><td><strong>Reported by:</strong></td><td>${report.username}</td></tr>
+                    <tr><td><strong>Date:</strong></td><td>${report.created_at}</td></tr>
+                    ${report.latitude && report.longitude ? 
+                        `<tr><td><strong>Coordinates:</strong></td><td>${report.latitude}, ${report.longitude}</td></tr>` : ''}
+                </table>
+                <p><strong>Description:</strong> ${report.description}</p>
+            </div>
+            <div class="col-md-4">
+                ${report.image_url ? 
+                    `<img src="${report.image_url}" class="img-fluid rounded" onclick="showImage('${report.image_url}')" style="cursor: pointer; border: 3px solid var(--accent-green);">` : 
+                    '<div class="text-center text-muted">No image available</div>'
+                }
+            </div>
+        </div>
+    `;
+    
+    document.getElementById('modal-report-details').innerHTML = detailsHtml;
+    
+    new bootstrap.Modal(document.getElementById('verificationModal')).show();
+}
+
+async function submitVerification(action) {
+    const reportId = document.getElementById('modal-report-id').value;
+    const verifiedBy = document.getElementById('verified_by').value;
+    
+    if (!reportId) {
+        showAlert('Report ID is missing', 'danger');
+        return;
+    }
+    
+    if (!verifiedBy.trim()) {
+        showAlert('Please enter who is verifying this report', 'danger');
+        return;
+    }
+    
+    const formData = {
+        report_id: reportId,
+        action: action,
+        verified_by: verifiedBy,
+        estimated_repair_date: document.getElementById('estimated_repair_date').value || '',
+        notes: document.getElementById('notes').value || ''
+    };
+    
+    try {
+        const response = await fetch('/api/verify-report', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(formData)
+        });
+        
+        const result = await response.json();
+        
+        if (response.ok) {
+            showAlert(`Report ${action}d successfully!`, 'success');
+            bootstrap.Modal.getInstance(document.getElementById('verificationModal')).hide();
+            document.getElementById('verificationForm').reset();
+            loadAllReports();
+        } else {
+            showAlert(result.error || 'Failed to update report', 'danger');
+        }
+    } catch (error) {
+        console.error('Verification error:', error);
+        showAlert('Failed to update report. Please try again.', 'danger');
+    }
+}
+
+function getSeverityColor(severity) {
+    const colors = {
+        'LOW': 'success',
+        'MEDIUM': 'warning',
+        'HIGH': 'danger',
+        'CRITICAL': 'dark'
+    };
+    return colors[severity] || 'secondary';
+}
+
+function getStatusColor(status) {
+    const colors = {
+        'PENDING': 'warning',
+        'VERIFIED': 'info',
+        'IN_PROGRESS': 'primary',
+        'COMPLETED': 'success',
+        'REJECTED': 'danger'
+    };
+    return colors[status] || 'secondary';
+}
+</script>
+{% endblock %}
